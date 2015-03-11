@@ -10,6 +10,5 @@
 #import "BNRLine.h"
 
 @interface BNRDrawView : UIView
-@property (nonatomic, strong) BNRLine *currentLine;
-@property (nonatomic, strong) NSMutableArray *finishedLines;
+
 @end
