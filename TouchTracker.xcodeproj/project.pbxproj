@@ -19,6 +19,9 @@
 		32F84B231AB06DF700581766 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32F84B0B1AB06DF700581766 /* UIKit.framework */; };
 		32F84B2B1AB06DF700581766 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 32F84B291AB06DF700581766 /* InfoPlist.strings */; };
 		32F84B2D1AB06DF700581766 /* TouchTrackerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F84B2C1AB06DF700581766 /* TouchTrackerTests.m */; };
+		32F84B381AB06E2D00581766 /* BNRLine.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F84B371AB06E2D00581766 /* BNRLine.m */; };
+		32F84B3B1AB06E6F00581766 /* BNRDrawView.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F84B3A1AB06E6F00581766 /* BNRDrawView.m */; };
+		32F84B3E1AB06FBD00581766 /* BNRDrawViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F84B3D1AB06FBD00581766 /* BNRDrawViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +51,12 @@
 		32F84B281AB06DF700581766 /* TouchTrackerTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "TouchTrackerTests-Info.plist"; sourceTree = "<group>"; };
 		32F84B2A1AB06DF700581766 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		32F84B2C1AB06DF700581766 /* TouchTrackerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TouchTrackerTests.m; sourceTree = "<group>"; };
+		32F84B361AB06E2D00581766 /* BNRLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BNRLine.h; sourceTree = "<group>"; };
+		32F84B371AB06E2D00581766 /* BNRLine.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BNRLine.m; sourceTree = "<group>"; };
+		32F84B391AB06E6F00581766 /* BNRDrawView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BNRDrawView.h; sourceTree = "<group>"; };
+		32F84B3A1AB06E6F00581766 /* BNRDrawView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BNRDrawView.m; sourceTree = "<group>"; };
+		32F84B3C1AB06FBD00581766 /* BNRDrawViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BNRDrawViewController.h; sourceTree = "<group>"; };
+		32F84B3D1AB06FBD00581766 /* BNRDrawViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BNRDrawViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,6 +118,12 @@
 			children = (
 				32F84B161AB06DF700581766 /* BNRAppDelegate.h */,
 				32F84B171AB06DF700581766 /* BNRAppDelegate.m */,
+				32F84B361AB06E2D00581766 /* BNRLine.h */,
+				32F84B371AB06E2D00581766 /* BNRLine.m */,
+				32F84B391AB06E6F00581766 /* BNRDrawView.h */,
+				32F84B3A1AB06E6F00581766 /* BNRDrawView.m */,
+				32F84B3C1AB06FBD00581766 /* BNRDrawViewController.h */,
+				32F84B3D1AB06FBD00581766 /* BNRDrawViewController.m */,
 				32F84B191AB06DF700581766 /* Images.xcassets */,
 				32F84B0E1AB06DF700581766 /* Supporting Files */,
 			);
@@ -241,7 +256,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				32F84B141AB06DF700581766 /* main.m in Sources */,
+				32F84B3E1AB06FBD00581766 /* BNRDrawViewController.m in Sources */,
+				32F84B381AB06E2D00581766 /* BNRLine.m in Sources */,
 				32F84B181AB06DF700581766 /* BNRAppDelegate.m in Sources */,
+				32F84B3B1AB06E6F00581766 /* BNRDrawView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
