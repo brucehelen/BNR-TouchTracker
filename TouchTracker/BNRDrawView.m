@@ -22,6 +22,7 @@
         self.linesInProgress = [NSMutableDictionary dictionary];
         self.finishedLines = [[NSMutableArray alloc] init];
         self.backgroundColor = [UIColor grayColor];
+        self.multipleTouchEnabled = YES;
     }
     
     return self;
@@ -40,8 +41,24 @@
 
 - (void)drawRect:(CGRect)rect
 {
-    [[UIColor blackColor] set];
+    CGFloat x;
+    NSUInteger k;
+    //[[UIColor blackColor] set];
     for (BNRLine *line in self.finishedLines) {
+        NSLog(@"begin = (%f, %f), end = (%f, %f)", line.begin.x, line.begin.y, line.end.x, line.end.y);
+        if (line.end.x == line.begin.x) {
+            x = 100;
+        } else {
+            x = (line.end.y - line.begin.y) / (line.end.x - line.begin.x);
+        }
+        x *= 100;
+        k = x;
+        k = k % 255;
+        NSLog(@"k = %d", k);
+        CGFloat color[] = {0, k / 255.0, 0, 1.0f};
+        CGColorRef colorRef = CGColorCreate(CGColorSpaceCreateDeviceRGB(), color);
+        [[UIColor colorWithCGColor:colorRef] set];
+        NSLog(@"x = %f", x);
         [self strokeLine:line];
     }
     
@@ -55,13 +72,14 @@
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
     NSLog(@"%@", NSStringFromSelector(_cmd));
+    [self.finishedLines removeAllObjects];
     for (UITouch *t in touches) {
         CGPoint location = [t locationInView:self];
         BNRLine *line = [[BNRLine alloc] init];
         line.begin = location;
         line.end = location;
         
-        NSValue *key = [NSValue valueWithNonretainedObject:touches];
+        NSValue *key = [NSValue valueWithNonretainedObject:t];
         self.linesInProgress[key] = line;
     }
     
@@ -86,6 +104,7 @@
     NSLog(@"%@", NSStringFromSelector(_cmd));
     for (UITouch *t in touches) {
         NSValue *key = [NSValue valueWithNonretainedObject:t];
+        
         BNRLine *line = self.linesInProgress[key];
         [self.finishedLines addObject:line];
         [self.linesInProgress removeObjectForKey:key];
@@ -93,5 +112,16 @@
     [self setNeedsDisplay];
 }
 
+// 触摸事件被取消，比如在画线的过程中有电话进来，那么就会收到touchesCancelled事件
+- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    NSLog(@"%@", NSStringFromSelector(_cmd));
+    for (UITouch *t in touches) {
+        NSValue *key = [NSValue valueWithNonretainedObject:t];
+        [self.linesInProgress removeObjectForKey:key];
+    }
+    
+    [self setNeedsDisplay];
+}
 
 @end
