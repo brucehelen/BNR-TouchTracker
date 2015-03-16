@@ -8,9 +8,12 @@
 
 #import "BNRDrawView.h"
 
-@interface BNRDrawView()
+@interface BNRDrawView() <UIGestureRecognizerDelegate>
+@property (nonatomic, strong) UIPanGestureRecognizer *moveRecognizer;
 @property (nonatomic, strong) NSMutableDictionary *linesInProgress;
 @property (nonatomic, strong) NSMutableArray *finishedLines;
+
+@property (nonatomic, weak) BNRLine *selectedLine;
 @end
 
 @implementation BNRDrawView
@@ -21,11 +24,128 @@
     if (self) {
         self.linesInProgress = [NSMutableDictionary dictionary];
         self.finishedLines = [[NSMutableArray alloc] init];
-        self.backgroundColor = [UIColor grayColor];
+        self.backgroundColor = [UIColor whiteColor];
         self.multipleTouchEnabled = YES;
+        
+        UITapGestureRecognizer *doubleTapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                                                              action:@selector(doubleTap:)];
+        doubleTapRecognizer.numberOfTapsRequired = 2;
+        doubleTapRecognizer.delaysTouchesBegan = YES;
+        [self addGestureRecognizer:doubleTapRecognizer];
+        
+        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                                              action:@selector(tap:)];
+        tap.delaysTouchesBegan = YES;
+        [tap requireGestureRecognizerToFail:doubleTapRecognizer];
+        [self addGestureRecognizer:tap];
+        
+        UILongPressGestureRecognizer *pressRecognizer = [[UILongPressGestureRecognizer alloc]
+                                                         initWithTarget:self
+                                                         action:@selector(longPress:)];
+        [self addGestureRecognizer:pressRecognizer];
+        
+        self.moveRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self
+                                                                      action:@selector(moveLine:)];
+        self.moveRecognizer.delegate = self;
+        self.moveRecognizer.cancelsTouchesInView = NO;
+        [self addGestureRecognizer:self.moveRecognizer];
+        
     }
     
     return self;
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+{
+    if (gestureRecognizer == self.moveRecognizer) {
+        return YES;
+    }
+    
+    return NO;
+}
+
+- (void)moveLine:(UIPanGestureRecognizer *)gr
+{
+    NSLog(@"moveLine = %d", gr.state);
+    if (!self.selectedLine) {
+        return;
+    }
+    
+    if (gr.state == UIGestureRecognizerStateChanged) {
+        CGPoint translation = [gr translationInView:self];
+        CGPoint begin = self.selectedLine.begin;
+        CGPoint end = self.selectedLine.end;
+        begin.x += translation.x;
+        begin.y += translation.y;
+        end.x += translation.x;
+        end.y += translation.y;
+        
+        self.selectedLine.begin = begin;
+        self.selectedLine.end = end;
+        
+        [self setNeedsDisplay];
+        [gr setTranslation:CGPointZero inView:self];
+    }
+}
+
+
+- (void)doubleTap:(UIGestureRecognizer *)gr
+{
+    NSLog(@"doubleTap");
+    [self.linesInProgress removeAllObjects];
+    [self.finishedLines removeAllObjects];
+    [self setNeedsDisplay];
+}
+
+- (void)tap:(UIGestureRecognizer *)gr
+{
+    NSLog(@"Recognizer tap");
+    CGPoint point = [gr locationInView:self];
+    self.selectedLine = [self lineAtPoint:point];
+    
+    if (self.selectedLine) {
+        [self becomeFirstResponder];
+        
+        UIMenuController *menu = [UIMenuController sharedMenuController];
+        UIMenuItem *deleteItem = [[UIMenuItem alloc] initWithTitle:@"Delete" action:@selector(deleteLine:)];
+        menu.menuItems = @[deleteItem];
+        
+        [menu setTargetRect:CGRectMake(point.x, point.y, 2, 2) inView:self];
+        [menu setMenuVisible:YES animated:YES];
+    } else {
+        [[UIMenuController sharedMenuController] setMenuVisible:NO animated:YES];
+    }
+    
+    [self setNeedsDisplay];
+}
+
+// UIView想成为第一响应对象，必须覆盖canBecomeFirstResponder并返回YES
+- (BOOL)canBecomeFirstResponder
+{
+    return YES;
+}
+
+// 响应UIMenuItem删除动作
+- (void)deleteLine:(id)sender
+{
+    [self.finishedLines removeObject:self.selectedLine];
+    [self setNeedsDisplay];
+}
+
+- (void)longPress:(UIGestureRecognizer *)gr
+{
+    NSLog(@"longPress = %d", gr.state);
+    if (gr.state == UIGestureRecognizerStateBegan) {
+        CGPoint point = [gr locationInView:self];
+        self.selectedLine = [self lineAtPoint:point];
+        if (self.selectedLine) {
+            [self.linesInProgress removeAllObjects];
+        }
+    } else if (gr.state == UIGestureRecognizerStateEnded) {
+        self.selectedLine = nil;
+    }
+    
+    [self setNeedsDisplay];
 }
 
 - (void)strokeLine:(BNRLine *)line
@@ -39,32 +159,47 @@
     [bp stroke];
 }
 
-- (void)drawRect:(CGRect)rect
+- (BNRLine *)lineAtPoint:(CGPoint)p
 {
-    CGFloat x;
-    NSUInteger k;
-    //[[UIColor blackColor] set];
-    for (BNRLine *line in self.finishedLines) {
-        NSLog(@"begin = (%f, %f), end = (%f, %f)", line.begin.x, line.begin.y, line.end.x, line.end.y);
-        if (line.end.x == line.begin.x) {
-            x = 100;
-        } else {
-            x = (line.end.y - line.begin.y) / (line.end.x - line.begin.x);
+    for (BNRLine *l in self.finishedLines) {
+        CGPoint start = l.begin;
+        CGPoint end = l.end;
+        
+        for (float t = 0.0; t <= 1.0; t += 0.05) {
+            float x = start.x + t * (end.x - start.x);
+            float y = start.y + t * (end.y - start.y);
+            
+            if (hypot(x - p.x, y - p.y) < 20.0) {
+                return l;
+            }
         }
-        x *= 100;
-        k = x;
-        k = k % 255;
-        NSLog(@"k = %d", k);
-        CGFloat color[] = {0, k / 255.0, 0, 1.0f};
-        CGColorRef colorRef = CGColorCreate(CGColorSpaceCreateDeviceRGB(), color);
-        [[UIColor colorWithCGColor:colorRef] set];
-        NSLog(@"x = %f", x);
-        [self strokeLine:line];
     }
     
+    return nil;
+}
+
+- (void)drawRect:(CGRect)rect
+{
+    // 设置绘制完成的线条颜色为蓝色
+    //[[UIColor blackColor] set];
+    for (BNRLine *line in self.finishedLines) {
+        CGFloat color[] = {0, 0, 1.0, 1.0f};
+        CGColorRef colorRef = CGColorCreate(CGColorSpaceCreateDeviceRGB(), color);
+        [[UIColor colorWithCGColor:colorRef] set];
+        [self strokeLine:line];
+    }
+
+    // 正在绘制线条的颜色为红色
     [[UIColor redColor] set];
     for (NSValue *key in self.linesInProgress) {
         [self strokeLine:self.linesInProgress[key]];
+        return;
+    }
+    
+    // 改变选中线条的颜色为绿色
+    if (self.selectedLine) {
+        [[UIColor greenColor] set];
+        [self strokeLine:self.selectedLine];
     }
 }
 
@@ -72,7 +207,7 @@
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
     NSLog(@"%@", NSStringFromSelector(_cmd));
-    [self.finishedLines removeAllObjects];
+    //[self.finishedLines removeAllObjects];
     for (UITouch *t in touches) {
         CGPoint location = [t locationInView:self];
         BNRLine *line = [[BNRLine alloc] init];
