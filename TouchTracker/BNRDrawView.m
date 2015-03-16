@@ -21,35 +21,39 @@
 - (instancetype)initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
+    
     if (self) {
         self.linesInProgress = [NSMutableDictionary dictionary];
         self.finishedLines = [[NSMutableArray alloc] init];
         self.backgroundColor = [UIColor whiteColor];
         self.multipleTouchEnabled = YES;
         
+        // 双击手势
         UITapGestureRecognizer *doubleTapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self
                                                                                               action:@selector(doubleTap:)];
         doubleTapRecognizer.numberOfTapsRequired = 2;
         doubleTapRecognizer.delaysTouchesBegan = YES;
         [self addGestureRecognizer:doubleTapRecognizer];
         
+        // 点击手势
         UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
                                                                               action:@selector(tap:)];
         tap.delaysTouchesBegan = YES;
         [tap requireGestureRecognizerToFail:doubleTapRecognizer];
         [self addGestureRecognizer:tap];
         
+        // 长按手势
         UILongPressGestureRecognizer *pressRecognizer = [[UILongPressGestureRecognizer alloc]
                                                          initWithTarget:self
                                                          action:@selector(longPress:)];
         [self addGestureRecognizer:pressRecognizer];
         
+        // 移动手势
         self.moveRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self
                                                                       action:@selector(moveLine:)];
         self.moveRecognizer.delegate = self;
         self.moveRecognizer.cancelsTouchesInView = NO;
         [self addGestureRecognizer:self.moveRecognizer];
-        
     }
     
     return self;
@@ -66,8 +70,8 @@
 
 - (void)moveLine:(UIPanGestureRecognizer *)gr
 {
-    NSLog(@"moveLine = %d", gr.state);
-    if (!self.selectedLine) {
+    NSLog(@"moveLine = %ld", gr.state);
+    if (!self.selectedLine || self.linesInProgress.count != 0) {
         return;
     }
     
@@ -134,7 +138,7 @@
 
 - (void)longPress:(UIGestureRecognizer *)gr
 {
-    NSLog(@"longPress = %d", gr.state);
+    NSLog(@"longPress = %ld", gr.state);
     if (gr.state == UIGestureRecognizerStateBegan) {
         CGPoint point = [gr locationInView:self];
         self.selectedLine = [self lineAtPoint:point];
@@ -158,6 +162,7 @@
     [bp addLineToPoint:line.end];
     [bp stroke];
 }
+
 
 - (BNRLine *)lineAtPoint:(CGPoint)p
 {
@@ -207,7 +212,6 @@
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
     NSLog(@"%@", NSStringFromSelector(_cmd));
-    //[self.finishedLines removeAllObjects];
     for (UITouch *t in touches) {
         CGPoint location = [t locationInView:self];
         BNRLine *line = [[BNRLine alloc] init];
